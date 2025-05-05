@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Controle de Gastos</title>
+    <style>
+        /* Variáveis de cores */
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e67e22;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --danger-color: #e74c3c;
+            --success-color: #2ecc71;
+        }
+
+        /* Estilos gerais */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Cabeçalho */
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-display {
+            background-color: var(--secondary-color);
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .total-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .total-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Formulário de despesas */
+        .expense-form {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin: 20px 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: var(--dark-color);
+        }
+
+        .form-control {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+        }
+
+        .btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.3s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-add {
+            background-color: var(--success-color);
+        }
+
+        .btn:hover {
+            background-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        /* Lista de despesas */
+        .expense-list {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .expense-header {
+            display: grid;
+            grid-template-columns: 1fr 120px 150px 80px;
+            padding: 15px 20px;
+            background-color: var(--light-color);
+            font-weight: 600;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .expense-items {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .expense-item {
+            display: grid;
+            grid-template-columns: 1fr 120px 150px 80px;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+
+        .expense-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .expense-amount {
+            font-weight: 600;
+            color: var(--danger-color);
+        }
+
+        .expense-date {
+            color: #666;
+        }
+
+        .btn-delete {
+            background-color: var(--danger-color);
+            padding: 8px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+
+        /* Status e alertas */
+        .status {
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .empty-state p {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .expense-form {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .expense-header, .expense-item {
+                grid-template-columns: 2fr 1fr 80px;
+            }
+
+            .expense-date {
+                display: none;
+            }
+
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .total-display {
+                width: 100%;
+                align-items: flex-start;
+            }
+        }
+
+        /* Ícones */
+        .material-icons {
+            font-size: 20px;
+        }
+
+        /* Loader */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid var(--secondary-color);
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <h1>Sistema de Controle de Gastos</h1>
+            <div class="total-display">
+                <span class="total-label">Total de Gastos</span>
+                <span class="total-value" id="total-value">R$ 0,00</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="status" class="status"></div>
+
+        <form id="expense-form" class="expense-form">
+            <div class="form-group">
+                <label for="description">Descrição</label>
+                <input type="text" id="description" class="form-control" placeholder="Ex: Compras no supermercado" required>
+            </div>
+
+            <div class="form-group">
+                <label for="amount">Valor (R$)</label>
+                <input type="number" id="amount" class="form-control" step="0.01" min="0.01" placeholder="0,00" required>
+            </div>
+
+            <div class="form-group">
+                <label for="date">Data</label>
+                <input type="date" id="date" class="form-control" required>
+            </div>
+
+            <button type="submit" class="btn btn-add">
+                <span class="material-icons">add_circle</span>
+                Adicionar
+            </button>
+        </form>
+
+        <div class="expense-list">
+            <div class="expense-header">
+                <div>Descrição</div>
+                <div>Valor</div>
+                <div>Data</div>
+                <div>Ações</div>
+            </div>
+            
+            <div id="expense-items" class="expense-items">
+                <!-- Os itens de despesa serão inseridos aqui dinamicamente -->
+                <div id="empty-state" class="empty-state">
+                    <span class="material-icons" style="font-size: 48px; color: #ccc;">receipt_long</span>
+                    <p>Nenhum gasto registrado ainda.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuração da API
+        const API_URL = 'http://localhost:5000/api';
+        
+        // Elementos do DOM
+        const expenseForm = document.getElementById('expense-form');
+        const expenseItems = document.getElementById('expense-items');
+        const emptyState = document.getElementById('empty-state');
+        const totalValue = document.getElementById('total-value');
+        const statusElement = document.getElementById('status');
+        
+        // Definir a data de hoje como padrão no input de data
+        document.getElementById('date').valueAsDate = new Date();
+        
+        // Carregar os gastos ao iniciar a página
+        document.addEventListener('DOMContentLoaded', () => {
+            loadExpenses();
+            loadTotal();
+        });
+        
+        // Adicionar evento de envio do formulário
+        expenseForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            addExpense();
+        });
+        
+        // Função para formatar valores monetários
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
+        
+        // Função para formatar datas
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return new Intl.DateTimeFormat('pt-BR').format(date);
+        }
+        
+        // Função para mostrar mensagens de status
+        function showStatus(message, type) {
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+            statusElement.style.display = 'block';
+            
+            // Ocultar após 3 segundos
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Função para carregar os gastos da API
+        async function loadExpenses() {
+            try {
+                const response = await fetch(`${API_URL}/expenses`);
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar os gastos');
+                }
+                
+                const expenses = await response.json();
+                renderExpenses(expenses);
+            } catch (error) {
+                console.error('Erro:', error);
+                showStatus('Não foi possível carregar os gastos. Verifique se o servidor está rodando.', 'error');
+            }
+        }
+        
+        // Função para carregar o total de gastos
+        async function loadTotal() {
+            try {
+                const response = await fetch(`${API_URL}/expenses/total`);
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar o total de gastos');
+                }
+                
+                const data = await response.json();
+                totalValue.textContent = formatCurrency(data.total);
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+        
+        // Função para renderizar os gastos na interface
+        function renderExpenses(expenses) {
+            // Limpar o conteúdo atual
+            expenseItems.innerHTML = '';
+            
+            // Verificar se há gastos para exibir
+            if (expenses.length === 0) {
+                expenseItems.appendChild(emptyState);
+                return;
+            }
+            
+            // Adicionar cada gasto à lista
+            expenses.forEach(expense => {
+                const expenseItem = document.createElement('div');
+                expenseItem.className = 'expense-item fade-in';
+                expenseItem.innerHTML = `
+                    <div class="expense-description">${expense.description}</div>
+                    <div class="expense-amount">${formatCurrency(expense.amount)}</div>
+                    <div class="expense-date">${formatDate(expense.date)}</div>
+                    <div>
+                        <button class="btn-delete" data-id="${expense.id}" title="Excluir">
+                            <span class="material-icons">delete</span>
+                        </button>
+                    </div>
+                `;
+                
+                // Adicionar evento para o botão de excluir
+                const deleteButton = expenseItem.querySelector('.btn-delete');
+                deleteButton.addEventListener('click', () => {
+                    deleteExpense(expense.id);
+                });
+                
+                expenseItems.appendChild(expenseItem);
+            });
+        }
+        
+        // Função para adicionar um novo gasto
+        async function addExpense() {
+            const description = document.getElementById('description').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const date = document.getElementById('date').value;
+            
+            // Validar os campos
+            if (!description || isNaN(amount) || amount <= 0 || !date) {
+                showStatus('Por favor, preencha todos os campos corretamente.', 'error');
+                return;
+            }
+            
+            // Preparar os dados para envio
+            const expenseData = {
+                description,
+                amount,
+                date
+            };
+            
+            try {
+                // Alterar o texto do botão para indicar carregamento
+                const submitButton = expenseForm.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.innerHTML;
+                submitButton.innerHTML = '<div class="loader"></div> Adicionando...';
+                submitButton.disabled = true;
+                
+                const response = await fetch(`${API_URL}/expenses`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(expenseData)
+                });
+                
+                // Restaurar o botão
+                submitButton.innerHTML = originalButtonText;
+                submitButton.disabled = false;
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Erro ao adicionar gasto');
+                }
+                
+                // Limpar o formulário
+                document.getElementById('description').value = '';
+                document.getElementById('amount').value = '';
+                document.getElementById('date').valueAsDate = new Date();
+                
+                // Recarregar os gastos e o total
+                loadExpenses();
+                loadTotal();
+                
+                showStatus('Gasto adicionado com sucesso!', 'success');
+            } catch (error) {
+                console.error('Erro:', error);
+                showStatus(error.message, 'error');
+            }
+        }
+        
+        // Função para excluir um gasto
+        async function deleteExpense(id) {
+            if (!confirm('Tem certeza que deseja excluir este gasto?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/expenses/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Erro ao excluir gasto');
+                }
+                
+                // Recarregar os gastos e o total
+                loadExpenses();
+                loadTotal();
+                
+                showStatus('Gasto excluído com sucesso!', 'success');
+            } catch (error) {
+                console.error('Erro:', error);
+                showStatus(error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
